@@ -89,7 +89,7 @@ MongoClient.connect(connectionUrl, { useNewUrlParser:true }, (error,client) => {
   })
 
   // Query using the ID:
-  db.collection('users').findOne({_id: new ObjectID('5d23a3ea3c298b1f6e6e528f')}, (error, user) => {
+  /* db.collection('users').findOne({_id: new ObjectID('5d23a3ea3c298b1f6e6e528f')}, (error, user) => {
     if (error) {
       return console.log(`Unable to fetch data.`)
     } else if (user === null) {
@@ -100,11 +100,41 @@ MongoClient.connect(connectionUrl, { useNewUrlParser:true }, (error,client) => {
 
   db.collection('tasks').find({ completed: false }).toArray((error, tasks) => {
     console.log(tasks)
-  })
+  }) */
+
   // Using .count() will return only the number of documents that match the query
   /* db.collection('tasks').find({ completed: false }).count((error, tasks) => {
     console.log(tasks)
   }) */
+
+
+  // DB Operations UPDATE:
+  // Update One
+  // const updatePromise = db.collection('users').updateOne({
+  //   _id: new ObjectID("5d23b0170934d6277439699f")
+  // }, {
+  //   $set: {
+  //     name: 'Joilson',
+  //     age: 29
+  //   }
+  // })
+
+  // updatePromise.then((result) => {
+  //   console.log(result)
+  // }).catch((error) => {
+  //   console.log(error)
+  // })
+
+  // The code below will do the same as the Code above, put is simpler and a more used pattern.
+  db.collection('users').updateOne({
+    _id: new ObjectID('5d23b0170934d6277439699f')
+  }, {
+    $set: { name: 'Cornholio'}
+  }).then((result) => {
+    console.log(`Matched: ${result.matchedCount}. Modified: ${result.modifiedCount}`)
+  }).catch((error) => {
+    console.log(error)
+  })
 
   // Delete One
   /* db.collection('users').deleteOne(
