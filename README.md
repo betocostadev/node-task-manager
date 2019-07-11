@@ -1,3 +1,10 @@
 # Node.js Task-Manager App
 
-A simple task-manager (to-do) app build using Node.js
+## Description
+A simple task-manager (to-do) app built using Node.js
+
+### Dependencies
+
+- mongodb
+- mongoose
+- validator
