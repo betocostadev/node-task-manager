@@ -37,6 +37,27 @@ app.get('/tasks', async (req, res) => {
   }
 })
 
+// PATCH - Update the task
+app.patch('/tasks/:id', async (req, res) => {
+  const updates = Object.keys(req.body)
+  const allowedUpdates = ['description', 'completed']
+  const isValidUpdate = updates.every((update) => allowedUpdates.includes(update))
+
+  if (!isValidUpdate) {
+    return res.status(400).send({error: 'Invalid update field!'})
+  }
+
+  try {
+    const task = await Task.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
+    if (!task) {
+      return res.status(404).send()
+    }
+    res.send(task)
+  } catch (error) {
+    res.status(400).send(error)
+  }
+})
+
 // POST new tasks to MongoDB
 app.post('/tasks', async (req, res) => {
   const task = new Task(req.body)
@@ -44,7 +65,7 @@ app.post('/tasks', async (req, res) => {
     await task.save()
     res.status(201).send(task)
   } catch (error) {
-    res.status(400).send(err)
+    res.status(400).send(error)
   }
 })
 
@@ -72,6 +93,31 @@ app.get('/users/:id', async (req, res) => {
     res.send(user)
   } catch (err) {
     res.status(500).send(err)
+  }
+})
+
+// PATCH - Update an existing resource
+app.patch('/users/:id', async (req, res) => {
+  // If someone tries to update something that doesn't exist, it will do nothing, but
+  // it will return a 200 code, an ok status. Using the array below to avoid this.
+  const updates = Object.keys(req.body)
+  const allowedUpdates = ['name', 'email', 'password', 'age']
+  const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+
+  if (!isValidOperation) {
+    return res.status(400).send({error: 'Invalid update field!'})
+  }
+
+  try {
+    // req.body to use the data we pass on the req.body.
+    // new: to pass as a new user before changing it / runValidators to validate the data
+    const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
+    if (!user) {
+      return res.status(404).send()
+    }
+    res.send(user)
+  } catch (error) {
+    res.status(400).send(error)
   }
 })
 
