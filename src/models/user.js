@@ -2,8 +2,11 @@
 // Add validator to check for some fields
 const validator = require('validator')
 const mongoose = require('mongoose')
+const bcrypt = require('bcryptjs')
 
-const User = mongoose.model('User', {
+// Using a Schema to be able to use mongoose middleware
+
+const userSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
@@ -13,6 +16,7 @@ const User = mongoose.model('User', {
   email: {
     type: String,
     required: true,
+    unique: true,
     trim: true,
     lowercase: true,
     validate(value) {
@@ -43,5 +47,19 @@ const User = mongoose.model('User', {
     }
   }
 })
+
+// Use the advantage of the middleware. Set the middleware.
+// Needs to be an standard function due to 'this' binding
+userSchema.pre('save', async function (next) {
+  const user = this;
+  // console.log('just before saving!')
+  if (user.isModified('password')) {
+    user.password = await bcrypt.hash(user.password, 8)
+  }
+
+  next()
+})
+
+const User = mongoose.model('User', userSchema)
 
 module.exports = User

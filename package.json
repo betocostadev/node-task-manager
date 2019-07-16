@@ -10,6 +10,7 @@
   "author": "Beto",
   "license": "MIT",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "express": "^4.17.1",
     "mongodb": "^3.2.7",
     "mongoose": "^5.6.4",
