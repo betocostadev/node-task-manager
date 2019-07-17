@@ -3,6 +3,7 @@
 const validator = require('validator')
 const mongoose = require('mongoose')
 const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 
 // Using a Schema to be able to use mongoose middleware
 
@@ -30,7 +31,7 @@ const userSchema = new mongoose.Schema({
     required: true,
     trim: true,
     minlength: 6,
-    maxlength: 16,
+    // adding minlength: 16 here was breaking the app after implementing the token!
     validate(value) {
       if (value.toLowerCase().includes('password')) {
         throw new Error(`Your password constains the word "password", this is not allowed!`)
@@ -45,9 +46,30 @@ const userSchema = new mongoose.Schema({
         throw new Error(`Age must be a positive number!`)
       }
     }
-  }
+  },
+  tokens: [{
+    token: {
+      type: String,
+      required: true
+    }
+  }]
 })
 
+// Use a method created for the schema to add the token
+// Methods are accessed by a single instance | Model methods, instance methods
+userSchema.methods.generateAuthToken = async function () {
+  const user = this
+  const token = jwt.sign({ _id: user._id.toString() }, 'thisismynewcourse')
+
+  user.tokens = user.tokens.concat({ token })
+  // Lines below are breaking the app
+  await user.save()
+  // Lines above
+
+  return token
+}
+
+// Static methods are accessed on the model
 userSchema.statics.findByCredentials = async (email, password) => {
   const user = await User.findOne({ email })
   if (!user) {

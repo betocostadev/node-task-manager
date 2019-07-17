@@ -1,5 +1,6 @@
 const express = require('express')
 const User = require('../models/user') // Use the User Model for mongoose
+const auth = require('../middleware/auth')// Use our Auth Middleware
 const router = new express.Router()
 
 // POST new users to MongoDB
@@ -12,8 +13,9 @@ router.post('/users', async (req, res) => {
   // })
   // REFACTOR for async / await
   try {
+    const token = await user.generateAuthToken()
     await user.save()
-    res.status(201).send(user)
+    res.status(201).send({user, token})
   } catch (error) {
     res.status(400).send(error)
   }
@@ -23,7 +25,9 @@ router.post('/users', async (req, res) => {
 router.post('/users/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
-    res.send(user)
+    // Using 'user' because it will ge generated for a very specific user
+    const token = await user.generateAuthToken()
+    res.send({user, token})
   } catch (error) {
     res.status(400).send()
   }
@@ -59,15 +63,21 @@ router.patch('/users/:id', async (req, res) => {
   }
 })
 
+// Get profile - Only the logged user
+router.get('/users/me', auth, async (req, res) => {
+  res.send(req.user)
+})
+
+
 // GET all users from MongoDB (Changed the method calls from app.get() to router...)
-router.get('/users', async (req, res) => {
+/* router.get('/users/me', auth, async (req, res) => {
   try {
     const users = await User.find({})
     res.send(users)
   } catch (error) {
     res.status(500).send(error)
   }
-})
+}) */
 
 // GET one user by ID
 // The ID will be dynamic upon each request. Express gives us a good use for this just by
