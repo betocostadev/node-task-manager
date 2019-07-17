@@ -48,8 +48,22 @@ const userSchema = new mongoose.Schema({
   }
 })
 
+userSchema.statics.findByCredentials = async (email, password) => {
+  const user = await User.findOne({ email })
+  if (!user) {
+    throw new Error('Unable to login!')
+  }
+  const isMatch = await bcrypt.compare(password, user.password)
+  if (!isMatch) {
+    throw new Error('Unable to login!')
+  }
+
+  return user
+}
+
 // Use the advantage of the middleware. Set the middleware.
 // Needs to be an standard function due to 'this' binding
+// Hash the plain text password:
 userSchema.pre('save', async function (next) {
   const user = this;
   // console.log('just before saving!')

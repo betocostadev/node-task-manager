@@ -19,6 +19,16 @@ router.post('/users', async (req, res) => {
   }
 })
 
+// Logging users by email and password
+router.post('/users/login', async (req, res) => {
+  try {
+    const user = await User.findByCredentials(req.body.email, req.body.password)
+    res.send(user)
+  } catch (error) {
+    res.status(400).send()
+  }
+})
+
 // PATCH - Update an existing resource
 router.patch('/users/:id', async (req, res) => {
   // If someone tries to update something that doesn't exist, it will do nothing, but
