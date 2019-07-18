@@ -55,8 +55,19 @@ const userSchema = new mongoose.Schema({
   }]
 })
 
-// Use a method created for the schema to add the token
+
 // Methods are accessed by a single instance | Model methods, instance methods
+// Get user profile - Hide sensitive data
+userSchema.methods.toJSON = function () {
+  const user = this
+  const userObject = user.toObject() //Mongoose method
+  delete userObject.password
+  delete userObject.tokens
+
+  return userObject
+}
+
+// Use a method created for the schema to add the token
 userSchema.methods.generateAuthToken = async function () {
   const user = this
   const token = jwt.sign({ _id: user._id.toString() }, 'thisismynewcourse')

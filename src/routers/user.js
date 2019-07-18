@@ -27,7 +27,7 @@ router.post('/users/login', async (req, res) => {
     const user = await User.findByCredentials(req.body.email, req.body.password)
     // Using 'user' because it will ge generated for a very specific user
     const token = await user.generateAuthToken()
-    res.send({user, token})
+    res.send({ user, token })
   } catch (error) {
     res.status(400).send()
   }
@@ -58,7 +58,8 @@ router.post('/users/logoutall', auth, async (req, res) => {
 })
 
 // PATCH - Update an existing resource
-router.patch('/users/:id', async (req, res) => {
+// REFACTORED - Changed so only the authenticated user can change its own data.
+router.patch('/users/me', auth, async (req, res) => {
   // If someone tries to update something that doesn't exist, it will do nothing, but
   // it will return a 200 code, an ok status. Using the array below to avoid this.
   const updates = Object.keys(req.body)
@@ -72,16 +73,14 @@ router.patch('/users/:id', async (req, res) => {
   try {
     // req.body to use the data we pass on the req.body.
     // new: to pass as a new user before changing it / runValidators to validate the data
-    const user = await User.findById(req.params.id)
+    // const user = await User.findById(req.params.id)
     // const user = await User.findByIdAndUpdate(req.params.id, req.body, {new: true, runValidators: true})
-    updates.forEach((update) => user[update] = req.body[update])
-
-    await user.save()
-
-    if (!user) {
-      return res.status(404).send()
-    }
-    res.send(user)
+    updates.forEach((update) => req.user[update] = req.body[update])
+    await req.user.save()
+    // if (!user) {
+    //   return res.status(404).send()
+    // }
+    res.send(req.user)
   } catch (error) {
     res.status(400).send(error)
   }
@@ -105,9 +104,10 @@ router.get('/users/me', auth, async (req, res) => {
 }) */
 
 // GET one user by ID
+// Function deactivated - Since the user can get its data already
 // The ID will be dynamic upon each request. Express gives us a good use for this just by
 // using like below /:name of the field you want.
-router.get('/users/:id', async (req, res) => {
+/* router.get('/users/:id', async (req, res) => {
   // console.log(req.params)
   const _id = req.params.id
   try {
@@ -119,16 +119,18 @@ router.get('/users/:id', async (req, res) => {
   } catch (err) {
     res.status(500).send(err)
   }
-})
+}) */
 
-// DELETE a user by its ID
-router.delete('/users/:id', async (req, res) => {
+// DELETE a user - Not by ID anymore, only authenticated
+// Refactored, so the user can only delete his authorized profile
+router.delete('/users/me', auth, async (req, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id)
-    if (!user) {
-      return res.status(404).send({error: 'User not found!'})
-    }
-    res.send(user)
+    // const user = await User.findByIdAndDelete(req.user._id)
+    // if (!user) {
+    //   return res.status(404).send({error: 'User not found!'})
+    // }
+    await req.user.remove()
+    res.send(req.user)
   } catch (error) {
     res.status(500).send(error)
   }
