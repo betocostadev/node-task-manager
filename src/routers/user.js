@@ -21,7 +21,7 @@ router.post('/users', async (req, res) => {
   }
 })
 
-// Logging users by email and password
+// POST - Logging users by email and password
 router.post('/users/login', async (req, res) => {
   try {
     const user = await User.findByCredentials(req.body.email, req.body.password)
@@ -30,6 +30,30 @@ router.post('/users/login', async (req, res) => {
     res.send({user, token})
   } catch (error) {
     res.status(400).send()
+  }
+})
+
+// POST Logout users | Drop only one auth, to avoid disconnecting on other devices
+router.post('/users/logout', auth, async (req, res) => {
+  try {
+    req.user.tokens = req.user.tokens.filter((token) => {
+      return token.token !== req.token
+    })
+    await req.user.save()
+    res.send()
+  } catch (error) {
+    res.status(500).send()
+  }
+})
+
+// POST - Logout ALL - Will wipe all the tokens to logout from everywhere
+router.post('/users/logoutall', auth, async (req, res) => {
+  try {
+    req.user.tokens = []
+    await req.user.save()
+    res.send()
+  } catch (error) {
+    res.status(500).send()
   }
 })
 
@@ -70,6 +94,7 @@ router.get('/users/me', auth, async (req, res) => {
 
 
 // GET all users from MongoDB (Changed the method calls from app.get() to router...)
+// Function deactivated
 /* router.get('/users/me', auth, async (req, res) => {
   try {
     const users = await User.find({})

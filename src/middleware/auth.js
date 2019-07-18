@@ -10,6 +10,7 @@ const auth = async (req, res, next) => {
     if (!user) {
       throw new Error()
     }
+    req.token = token // giving back the token to be able to logout the user
     // If it pass the above, then give access to the user, avoiding to run the login again
     req.user = user
     // console.log(token)
