@@ -11,6 +11,11 @@ const Task = mongoose.model('Task',{
   completed: {
     type: Boolean,
     default: false
+  }, // Set the owner, this will help us to create a relationship user and task
+  owner: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'User' // This creates a reference for User in the User model.
   }
 })
 

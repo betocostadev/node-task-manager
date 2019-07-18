@@ -20,15 +20,3 @@ app.listen(port, () => {
   console.log(`Server is up on port: ${port}`)
 })
 
-
-// Using express .toJSON test
-/* const pet = {
-  name: 'Churchill'
-}
-
-pet.toJSON = function () {
-  console.log(this)
-  return this
-}
-
-console.log(JSON.stringify(pet)) */
