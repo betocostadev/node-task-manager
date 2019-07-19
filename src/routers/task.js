@@ -43,10 +43,30 @@ router.patch('/tasks/:id', auth, async (req, res) => {
 })
 
 // GET all tasks from MongoDB
+// Use queries... /tasks?completed=true
+// limit and skip... /tasks?completed=true&limit=5&skip=5 /first set of 5, then second set of 5
+// /tasks/?sortBy=createdAt_asc | createdAt_desc = Ascending or descending order.
 router.get('/tasks', auth, async (req, res) => {
+  const match = {}
+  const sort = {}
+  if (req.query.completed) {
+    match.completed = req.query.completed === 'true'
+  }
+  if (req.query.sortBy) {
+    const parts = req.query.sortBy.split('_') // convert to array ['createdAt', 'asc']
+    sort[parts[0]] = parts[1] === 'desc' ? -1 : 1 //  returns {createdAt: x} 1 asc, -1 desc
+  }
   try {
-    const tasks = await Task.find({ owner: req.user._id})
-    res.send(tasks)
+    await req.user.populate({
+      path: 'tasks',
+      match,
+      options: {
+        limit: parseInt(req.query.limit),
+        skip: parseInt(req.query.skip),
+        sort
+      }
+    }).execPopulate()
+    res.send(req.user.tasks)
   } catch (error) {
     res.status(500).send(error)
   }

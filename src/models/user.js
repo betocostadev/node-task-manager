@@ -53,7 +53,9 @@ const userSchema = new mongoose.Schema({
       type: String,
       required: true
     }
-  }]
+  }]// Add a second argument below, another object for timestamps
+}, {
+  timestamps: true
 })
 
 /* Since the tasks are going to their own collection inside the DB, we are not going to
