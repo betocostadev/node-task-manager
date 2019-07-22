@@ -1,4 +1,5 @@
 const express = require('express')
+const multer = require('multer') // multer for file uploads
 const User = require('../models/user') // Use the User Model for mongoose
 const auth = require('../middleware/auth')// Use our Auth Middleware
 const router = new express.Router()
@@ -134,6 +135,14 @@ router.delete('/users/me', auth, async (req, res) => {
   } catch (error) {
     res.status(500).send(error)
   }
+})
+
+// File uploads using multer
+const upload = multer({
+  dest: 'avatars'
+})
+router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+  res.send()
 })
 
 
