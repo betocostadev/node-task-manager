@@ -11,16 +11,6 @@ const app = express()
 // process... the used port for Heroku
 const port = process.env.PORT || 3000
 
-// multer example
-const multer = require('multer')
-// upload object with its options. Should be one for each kind of file like pdf, jpeg, etc.
-const upload = multer({
-  dest: 'images'
-})
-app.post('/upload', upload.single('upload'), (req, res) => {
-  res.send()
-})
-
 app.use(express.json())
 // Use Routes
 app.use(userRouter)

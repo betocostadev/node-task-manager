@@ -137,11 +137,35 @@ router.delete('/users/me', auth, async (req, res) => {
   }
 })
 
-// File uploads using multer
+// File uploads using multer - Avatar image
 const upload = multer({
-  dest: 'avatars'
+  // removed destination to be able to run a function after getting the image
+  limits: {
+    fileSize: 1000000
+  },
+  fileFilter(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+      // Using a regex for jpg, jpeg and png
+      return cb(new Error('Please upload an image file (Max file size: 1MB. File extensions: .jpg, jpeg, png)'))
+    }
+    cb(undefined, true) // Ok the file was uploaded
+  }
 })
-router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+
+// Route to upload avatar image
+router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
+  // access the data send by the user:
+  req.user.avatar = req.file.buffer
+  await req.user.save()
+  res.send()
+}, (error, req, res, next) => {
+  res.status(400).send({ error: error.message})
+})
+
+// Delete avatar image
+router.delete('/users/me/avatar', auth, async (req, res) => {
+  req.user.avatar = undefined
+  await req.user.save()
   res.send()
 })
 
