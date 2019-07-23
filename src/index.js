@@ -2,7 +2,6 @@
 const express = require('express')
 // Require mongoose
 require('./db/mongoose')
-
 // Require routes
 const userRouter = require('./routers/user')
 const taskRouter = require('./routers/task')

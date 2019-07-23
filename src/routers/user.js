@@ -1,5 +1,6 @@
 const express = require('express')
 const multer = require('multer') // multer for file uploads
+const sharp = require('sharp') // For image resize, cut, etc...
 const User = require('../models/user') // Use the User Model for mongoose
 const auth = require('../middleware/auth')// Use our Auth Middleware
 const router = new express.Router()
@@ -154,8 +155,13 @@ const upload = multer({
 
 // Route to upload avatar image
 router.post('/users/me/avatar', auth, upload.single('avatar'), async (req, res) => {
-  // access the data send by the user:
-  req.user.avatar = req.file.buffer
+  // access the data send by the user and then, change it using sharp
+  // We will convert to a 250x250 png image
+  const buffer = await sharp(req.file.buffer).resize({
+    width: 250, height: 250
+  }).png().toBuffer() // uploaded image
+
+  req.user.avatar = buffer
   await req.user.save()
   res.send()
 }, (error, req, res, next) => {
@@ -169,5 +175,19 @@ router.delete('/users/me/avatar', auth, async (req, res) => {
   res.send()
 })
 
+// Fetch an user avatar and also get the image back
+router.get('/users/:id/avatar', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+    if (!user || !user.avatar) {
+      throw new Error(`Cannot fetch user data`)
+    }
+    // Set the response to be an image | Needs to be specific png, jpg, etc.
+    res.set('Content-Type', 'image/png')
+    res.send(user.avatar)
+  } catch (error) {
+    res.status(404).send(error)
+  }
+})
 
 module.exports = router

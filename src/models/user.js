@@ -78,6 +78,7 @@ userSchema.methods.toJSON = function () {
   const userObject = user.toObject() //Mongoose method
   delete userObject.password
   delete userObject.tokens
+  delete userObject.avatar // To not return the binary image file for simple requests
 
   return userObject
 }
