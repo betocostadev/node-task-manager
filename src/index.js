@@ -8,7 +8,7 @@ const taskRouter = require('./routers/task')
 
 const app = express()
 // process... the used port for Heroku
-const port = process.env.PORT || 3000
+const port = process.env.PORT // Port || removed, now in a config file.
 
 app.use(express.json())
 // Use Routes

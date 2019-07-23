@@ -3,6 +3,7 @@ const multer = require('multer') // multer for file uploads
 const sharp = require('sharp') // For image resize, cut, etc...
 const User = require('../models/user') // Use the User Model for mongoose
 const auth = require('../middleware/auth')// Use our Auth Middleware
+const { sendWelcomeEmail, sendByeEmail } = require('../emails/account') // Send email to users
 const router = new express.Router()
 
 // POST new users to MongoDB
@@ -13,10 +14,11 @@ router.post('/users', async (req, res) => {
   // }).catch((err) => {
   //   res.status(400).send(err)
   // })
-  // REFACTOR for async / await
+  // REFACTORED for async / await:
   try {
     const token = await user.generateAuthToken()
     await user.save()
+    sendWelcomeEmail(user.email, user.name)
     res.status(201).send({user, token})
   } catch (error) {
     res.status(400).send(error)
@@ -132,6 +134,7 @@ router.delete('/users/me', auth, async (req, res) => {
     //   return res.status(404).send({error: 'User not found!'})
     // }
     await req.user.remove()
+    sendByeEmail(req.user.email, req.user.name)
     res.send(req.user)
   } catch (error) {
     res.status(500).send(error)

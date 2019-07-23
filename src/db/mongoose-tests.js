@@ -3,7 +3,7 @@
 const validator = require('validator')
 const mongoose = require('mongoose')
 // The difference with mongoose is that we provide the DB name with the URL like below:
-const connectionURL = 'mongodb://127.0.0.1:27017/task-manager-api' // /taks-manager-api = db
+const connectionURL = process.env.MONGODB_CONNECT // /task-manager-api = db
 // useCreateIndex = Makes sure that indexes are created
 mongoose.connect(connectionURL, {useNewUrlParser: true}, {useCreateIndex: true});
 

@@ -5,6 +5,7 @@ const myFunction = async () => {
   // series of characters are enough
   // Third, object to customize the time to be authenticated
   // Can be writen in plain english, like '2 weeks', '1 month', '14 days', etc.
+  // The code below 'thisismynewcourse' can be hidden in an enviroment variable
   const token = jwt.sign({_id: 'abc123'}, 'thisismynewcourse', { expiresIn: '7 days'})
   console.log(token)
 

@@ -86,7 +86,9 @@ userSchema.methods.toJSON = function () {
 // Use a method created for the schema to add the token
 userSchema.methods.generateAuthToken = async function () {
   const user = this
-  const token = jwt.sign({ _id: user._id.toString() }, 'thisismynewcourse')
+  // JWT secrect changed and moved to an env variable.
+  const jwtCode = process.env.JWT_CODE
+  const token = jwt.sign({ _id: user._id.toString() }, jwtCode)
 
   user.tokens = user.tokens.concat({ token })
   // Lines below are breaking the app
