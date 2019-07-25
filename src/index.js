@@ -1,19 +1,9 @@
 // Initialization
-const express = require('express')
-// Require mongoose
-require('./db/mongoose')
-// Require routes
-const userRouter = require('./routers/user')
-const taskRouter = require('./routers/task')
+// Not initializing here anymore. Due to testing, initializing the app from app.js
 
-const app = express()
+const app = require('./app')
 // process... the used port for Heroku
 const port = process.env.PORT // Port || removed, now in a config file.
-
-app.use(express.json())
-// Use Routes
-app.use(userRouter)
-app.use(taskRouter)
 
 app.listen(port, () => {
   console.log(`Server is up on port: ${port}`)
