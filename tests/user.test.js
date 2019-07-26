@@ -1,9 +1,7 @@
 const request = require('supertest')
-const jwt = require('jsonwebtoken')
-const mongoose = require('mongoose')
 const app = require('../src/app')
-// Call the user model to be able to delete every user before testing
 const User = require('../src/models/user')
+const { userOneId, userOne, setupDatabase } = require('./fixtures/db')
 
 /* Why it is important to use an empty collection on the DB to do the tests?
 Because, when we run a function, like the 'Signup new user' below, a new instance will be created on the database.
@@ -11,26 +9,14 @@ A second one will fail to be created because it will have the same e-mail.
 JEST provides ways to clean up the DB after or before testing to make sure it will all work correctly.
 */
 
-// A user that will be created before using beforeEach to delete the users.
-// Doing this to test a function like Login
-const userOneId = new mongoose.Types.ObjectId()
-const userOne = {
-  _id: userOneId,
-  name: 'Thor',
-  email: 'mjolnir@asgard.org',
-  password: 'todrinkANDsmash!',
-  age: 4200,
-  tokens: [{
-    token: jwt.sign({ _id: userOneId}, process.env.JWT_CODE)
-  }]
-}
-
-// Delete all users before running the next test
-beforeEach(async () => {
+// Delete all users before running the next test - No using it anymore.
+// Now using the version from the fixtures/db.js file
+/* beforeEach(async () => {
   await User.deleteMany()
   // Await for the user to be created:
   await new User(userOne).save()
-})
+}) */
+beforeEach(setupDatabase)
 
 test('Signup a new user', async () => {
   const response = await request(app).post('/users').send({
@@ -67,7 +53,7 @@ test('Login existing user', async () => {
   expect(response.body.token).toBe(user.tokens[1].token) // Check that the current token is the new token
 })
 
-test('No login for Nonexistent user', async () => {
+test('DONT login nonexistent user', async () => {
   await request(app).post('/users/login').send({
     email: 'noman@nowhere.com',
     password: 'aSimplePass!'
@@ -82,7 +68,7 @@ test('Get user profile', async () => {
       .expect(200)
 })
 
-test('Dont get profile for non auth user', async () => {
+test('DONT get profile for NOT logged user', async () => {
   await request(app).get('/users/me').send().expect(401)
 })
 
@@ -97,8 +83,38 @@ test('Delete the user account', async () => {
 
 })
 
-test('Dont delete account for NOT logged user', async () => {
+test('DONT delete account for NOT logged user', async () => {
   await request(app).delete('/users/me')
       .send()
       .expect(401)
+})
+
+test('Upload avatar image', async () => {
+  await request(app).post('/users/me/avatar')
+      .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+      .attach('avatar', 'tests/fixtures/profile-01.jpeg')
+      .expect(200)
+  const user = await User.findById(userOneId)
+  // Using .toEqual() - It users an algorithm to compare objects
+  expect(user.avatar).toEqual(expect.any(Buffer))
+})
+
+test('Update user profile fields', async () => {
+  await request(app).patch('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      name: 'Odin'
+    })
+    .expect(200)
+    const user = await User.findById(userOneId)
+    expect(user.name).toBe('Odin')
+})
+
+test('DONT Update user INVALID profile fields', async () => {
+  await request(app).patch('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      location: 'Asgard'
+    })
+    .expect(400)
 })
