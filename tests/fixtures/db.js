@@ -2,6 +2,7 @@
 const mongoose = require('mongoose')
 const jwt = require('jsonwebtoken')
 const User = require('../../src/models/user')
+const Task = require('../../src/models/task')
 // A user that will be created before using beforeEach to delete the users.
 // Doing this to test a function like Login
 const userOneId = new mongoose.Types.ObjectId()
@@ -16,15 +17,59 @@ const userOne = {
   }]
 }
 
+const userTwoId = new mongoose.Types.ObjectId()
+const userTwo = {
+  _id: userTwoId,
+  name: 'Loki',
+  email: 'lokithebest@asgard.org',
+  password: 'MakeYouAFool!',
+  age: 5000,
+  tokens: [{
+    token: jwt.sign({ _id: userTwoId}, process.env.JWT_CODE)
+  }]
+}
+
+// Create a new task from here
+const taskOne = {
+  _id: new mongoose.Types.ObjectId(),
+  description: 'My first task',
+  completed: true,
+  owner: userOneId
+}
+
+const taskTwo = {
+  _id: new mongoose.Types.ObjectId(),
+  description: 'My second task',
+  completed: false,
+  owner: userOneId
+}
+
+const taskThree = {
+  _id: new mongoose.Types.ObjectId(),
+  description: 'Go to Earth',
+  completed: true,
+  owner: userTwo._id
+}
+
 const setupDatabase = async () => {
-  // Clean the users from the DB
+  // Clean the users and tasks from the DB
   await User.deleteMany()
+  await Task.deleteMany()
   // Await for the user to be created:
   await new User(userOne).save()
+  await new User(userTwo).save()
+  await new Task(taskOne).save()
+  await new Task(taskTwo).save()
+  await new Task(taskThree).save()
 }
 
 module.exports = {
   userOneId,
   userOne,
+  userTwoId,
+  userTwo,
+  taskOne,
+  taskTwo,
+  taskThree,
   setupDatabase
 }
