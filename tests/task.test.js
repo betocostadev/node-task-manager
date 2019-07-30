@@ -9,6 +9,8 @@ const {
   taskOne,
   taskTwo,
   taskThree,
+  taskFour,
+  taskFive,
   setupDatabase
 } = require('./fixtures/db')
 
@@ -61,7 +63,7 @@ test('Get user tasks only the owner', async () => {
     .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
     .send()
     .expect(200)
-    expect(response.body.length).toEqual(2)
+    expect(response.body.length).toEqual(4)
 })
 
 test('User CANT delete tasks from other users', async () => {
@@ -73,6 +75,16 @@ test('User CANT delete tasks from other users', async () => {
     // Assert if the task is still on the DB
     const task = await Task.findById(taskOne._id)
     expect(task).not.toBeNull()
+})
+
+test('User CANT update tasks from other users', async () => {
+  const response = await request(app)
+    .patch(`/tasks/${taskOne._id}`)
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send({
+      completed: false
+    })
+    .expect(404)
 })
 
 test('Delete User task', async () => {
@@ -95,20 +107,56 @@ test('DONT delete task if unauthenticated', async () => {
     expect(task).not.toBeNull()
 })
 
+test('Fetch User task by ID', async () => {
+  const response = await request(app)
+    .get(`/tasks/${taskOne._id}`)
+    .set(`Authorization`, `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
+  // Assert if it returned the correct task
+  const task = await Task.findById(taskOne._id)
+  expect(response.body._id).toBe(task.id)
+})
 
+test('DONT fetch user task by ID IF Unauthenticated', async () => {
+  const response = await request(app)
+    .get(`/tasks/${taskOne._id}`)
+    .send()
+    .expect(401)
+})
 
-// TODO
-// Task Test Ideas
-//
+test('Fetch User task by ID', async () => {
+  const response = await request(app)
+    .get(`/tasks/${taskOne._id}`)
+    .set(`Authorization`, `Bearer ${userTwo.tokens[0].token}`)
+    .send()
+    .expect(404)
+  // Assert if it returned the empty object
+  expect(response.body).toEqual({})
+})
 
-// Should not update task with invalid description/completed - DONE
-// Should delete user task - DONE
-// Should not delete task if unauthenticated - DONE
-// Should not update other users task
-// Should fetch user task by id
-// Should not fetch user task by id if unauthenticated
-// Should not fetch other users task by id
-// Should fetch only completed tasks
-// Should fetch only incomplete tasks
-// Should sort tasks by description/completed/createdAt/updatedAt
-// Should fetch page of tasks
+test('Fetch ONLY completed tasks', async() => {
+  const response = await request(app)
+    .get(`/tasks?completed=true`)
+    .set(`Authorization`, `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
+})
+
+test('Fetch ONLY incompleted tasks', async() => {
+  const response = await request(app)
+    .get(`/tasks?completed=false`)
+    .set(`Authorization`, `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
+})
+
+test('Fetch ALL tasks', async() => {
+  const response = await request(app)
+    .get(`/tasks/`)
+    .set(`Authorization`, `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
+  // User has 4 tasks, check if its the same
+    expect(response.body.length).toBe(4)
+})
