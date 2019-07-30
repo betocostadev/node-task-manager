@@ -45,6 +45,16 @@ test('DONT create a task if no description is provided', async () => {
     expect(task).toBeNull()
 })
 
+test('CANT change task field other than description/completed', async () => {
+  const response = await request(app)
+    .patch(`/tasks/${taskOne._id}`)
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      location: 'Asgard'
+    })
+    .expect(400)
+})
+
 test('Get user tasks only the owner', async () => {
   const response = await request(app)
     .get('/tasks')
@@ -56,13 +66,33 @@ test('Get user tasks only the owner', async () => {
 
 test('User CANT delete tasks from other users', async () => {
   const response = await request(app)
-  .delete(`/tasks/${taskOne._id}`)
-  .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
-  .send()
-  .expect(404)
-  // Assert if the task is still on the DB
-  const task = await Task.findById(taskOne._id)
-  expect(task).not.toBeNull()
+    .delete(`/tasks/${taskOne._id}`)
+    .set('Authorization', `Bearer ${userTwo.tokens[0].token}`)
+    .send()
+    .expect(404)
+    // Assert if the task is still on the DB
+    const task = await Task.findById(taskOne._id)
+    expect(task).not.toBeNull()
+})
+
+test('Delete User task', async () => {
+  const response = await request(app)
+    .delete(`/tasks/${taskOne._id}`)
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
+    // Assert if the task was deleted
+    const task = await Task.findById(taskOne._id)
+    expect(task).toBeNull()
+})
+
+test('DONT delete task if unauthenticated', async () => {
+  const response = await request(app)
+    .delete(`/tasks/${taskTwo._id}`)
+    .send()
+    .expect(401)
+    const task = await Task.findById(taskTwo._id)
+    expect(task).not.toBeNull()
 })
 
 
@@ -71,9 +101,9 @@ test('User CANT delete tasks from other users', async () => {
 // Task Test Ideas
 //
 
-// Should not update task with invalid description/completed
-// Should delete user task
-// Should not delete task if unauthenticated
+// Should not update task with invalid description/completed - DONE
+// Should delete user task - DONE
+// Should not delete task if unauthenticated - DONE
 // Should not update other users task
 // Should fetch user task by id
 // Should not fetch user task by id if unauthenticated
