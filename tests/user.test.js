@@ -1,7 +1,7 @@
 const request = require('supertest')
 const app = require('../src/app')
 const User = require('../src/models/user')
-const { userOneId, userOne, setupDatabase } = require('./fixtures/db')
+const { userOneId, userOne, userTwoId, userTwo, setupDatabase } = require('./fixtures/db')
 
 /* Why it is important to use an empty collection on the DB to do the tests?
 Because, when we run a function, like the 'Signup new user' below, a new instance will be created on the database.
@@ -42,6 +42,24 @@ test('Signup a new user', async () => {
   })
 })
 
+test('DONT login user with wrong email', async () => {
+  const response = await request(app)
+    .post('/users/login')
+    .send({
+      email: 'komono@gmail.com',
+      password: userOne.password
+    }).expect(400)
+})
+
+test('DONT login user with wrong password', async () => {
+  const response = await request(app)
+    .post('/users/login')
+    .send({
+      email: userOne.email,
+      password: 'krauser'
+    }).expect(400)
+})
+
 test('Login existing user', async () => {
   // Use the response body to validate the correct user is logged in
   const response = await request(app).post('/users/login').send({
@@ -62,10 +80,10 @@ test('DONT login nonexistent user', async () => {
 
 test('Get user profile', async () => {
   await request(app)
-      .get('/users/me')
-      .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
-      .send()
-      .expect(200)
+    .get('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
 })
 
 test('DONT get profile for NOT logged user', async () => {
@@ -75,9 +93,9 @@ test('DONT get profile for NOT logged user', async () => {
 test('Delete the user account', async () => {
   // Also, check if the user was deleted by looking for it after deleting
   await request(app).delete('/users/me')
-      .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
-      .send()
-      .expect(200)
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send()
+    .expect(200)
   const user = await User.findById(userOneId)
   expect(user).toBeNull()
 
@@ -85,8 +103,8 @@ test('Delete the user account', async () => {
 
 test('DONT delete account for NOT logged user', async () => {
   await request(app).delete('/users/me')
-      .send()
-      .expect(401)
+    .send()
+    .expect(401)
 })
 
 test('Upload avatar image', async () => {
@@ -106,8 +124,8 @@ test('Update user profile fields', async () => {
       name: 'Odin'
     })
     .expect(200)
-    const user = await User.findById(userOneId)
-    expect(user.name).toBe('Odin')
+  const user = await User.findById(userOneId)
+  expect(user.name).toBe('Odin')
 })
 
 test('DONT Update user INVALID profile fields', async () => {
@@ -119,11 +137,53 @@ test('DONT Update user INVALID profile fields', async () => {
     .expect(400)
 })
 
-// TODO
-//
-// User Test Ideas
-//
-// Should not signup user with invalid name/email/password
-// Should not update user if unauthenticated
-// Should not update user with invalid name/email/password
-// Should not delete user if unauthenticated
+test('DONT Update user fields if unauthenticated', async () => {
+  const response = await request(app)
+    .patch('/users/me')
+    .send({
+      name: 'Ratioro'
+    })
+    .expect(401)
+    // Assert if the data was not changed
+  const userOne = await User.findById(userOneId)
+  const userTwo = await User.findById(userTwoId)
+  expect(userOne.name).toBe('Thor')
+  expect(userTwo.name).toBe('Loki')
+})
+
+test('DONT update user with invalid name', async () => {
+  const response = await request(app)
+    .patch('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      name: ''
+    })
+    .expect(400)
+    // Assert that the name wasnt changed
+  const testedUser = await User.findById(userOneId)
+  expect(testedUser.name).toBe('Thor')
+})
+
+test('DONT update user with invalid password (too short)', async() => {
+  await request(app)
+    .patch('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      password: '123'
+    })
+    .expect(400)
+  // In this case, cant check for password, since we are creating the user each test.
+})
+
+test('DONT update user with invalid email', async () => {
+  await request(app)
+    .patch('/users/me')
+    .set('Authorization', `Bearer ${userOne.tokens[0].token}`)
+    .send({
+      email: 'Thor.com'
+    })
+    .expect(400)
+  // Assert the user email wasnt changed
+  const testedUser = await User.findById(userOneId)
+  expect(testedUser.email).toBe('mjolnir@asgard.org')
+})
