@@ -15,7 +15,7 @@
   "author": "Beto",
   "license": "MIT",
   "dependencies": {
-    "@sendgrid/mail": "^7.7.0",
+    "@sendgrid/mail": "^8.1.0",
     "bcryptjs": "^2.4.3",
     "express": "^4.17.3",
     "jsonwebtoken": "^9.0.0",
